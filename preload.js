@@ -1,8 +1,12 @@
-// All of the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
+
+// whis will contain all the electron and nodeJS modules
+window.exported = {};
+
 const { dialog } = require('electron').remote;
-window.electron = {};
-window.electron.dialog = dialog;
+window.exported.dialog = dialog;
+
+const exec = require('child_process').exec;
+window.exported.exec = exec;
 
 window.addEventListener('DOMContentLoaded', () => {
 

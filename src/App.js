@@ -1,14 +1,20 @@
 import React from 'react';
 import './App.css';
-const exec = require('child_process').exec;
 
-const dialog = window?.electron?.dialog;
+import Utils from './scripts'
+
+const exec = window?.exported?.exec;
+const dialog = window?.exported?.dialog;
 
 class App extends React.Component {
 
     defaultState = {
-        opened: true,
-        positionTop: '0px'
+        directorySelected : '',
+        outputRepository : '',
+        errorRepository: '',
+        searchString :'',
+        lines: [],
+        repositoryPaths: []
     };
 
     state = {
@@ -17,11 +23,78 @@ class App extends React.Component {
 
     render() {
 
-        var selectRepoFolder = function() {
+        let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
+
+        let selectRepoFolder  = () => {
 
             dialog.showOpenDialog({properties: ['openDirectory', 'multiSelections']}).then( (args) => {
                 console.log(args);
+
+                if (args.canceled) {
+                    this.setState( () => ({
+                        directorySelected: 'No directory selected'
+                    }));
+                    return;
+                }
+
+                console.log('filepath selected: ', args.filePaths);
+                let repositoryPath = Utils.convertWinToUnixFolder(args.filePaths[0]);
+                console.log('filepath converted:', repositoryPath);
+
+                this.setState( () => ({
+                    directorySelected: repositoryPath
+                }));
+
+                exec( bashPath + ' --login -c \" cd ""' + this.state.directorySelected + '"" && git remote -v \"', (error, stdout, stderr) => {
+                    if (stderr) {
+                        this.setState( () => ({
+                            errorRepository: stderr,
+                            outputRepository: ''
+                        }));
+                    } else {
+                        this.setState( () => ({
+                            errorRepository: '',
+                            outputRepository: stdout
+                        }));
+                    }
+                });
+
+
+
             });
+        };
+
+        var handleSearchChange = (event) => {
+            this.setState({searchString: event.target.value});
+        };
+
+        var search = (e) => {
+            if ((e.key === 'Enter' ) && this.state.searchString) {
+
+                console.log('Searching for: ',this.state.searchString);
+
+                exec(bashPath + ' --login -c \" cd ""' + this.state.directorySelected + '"" && git branch -a | tr -d \\* | sed \'/->/d\' | xargs git grep -n -I ""'+this.state.searchString+'""', (error, stdout, stderr) => {
+                    if (stderr) {
+                        this.setState( () => ({
+                            errorRepository: stderr,
+                            outputRepository: ''
+                        }));
+                    } else {
+
+                        let lines = stdout.split('\n');
+
+                        lines.map( line => {
+                            let tokens = line.split(':');
+                            tokens.pop();
+                            return tokens.join(':');
+                        })
+
+                        this.setState( () => ({
+                            lines: lines
+                        }));
+                    }
+                });
+            }
         };
 
         return (
@@ -29,26 +102,26 @@ class App extends React.Component {
                 <div>
                     <h2>Select a git repository</h2>
                     <button id="selectFolderButton" onClick={selectRepoFolder}>SELECT REPO FOLDER</button>
-                    <span id="sourceDirPath"></span>
+                    <span id="sourceDirPath">{this.state.directorySelected}</span>
                 </div>
 
                 <div>
                     <hr/>
-                    <span id="outputRemote"></span>
-                    <span id="errorRemote"></span>
+                    <span id="outputRemote">{this.state.outputRepository}</span>
+                    <span id="errorRemote">{this.state.errorRepository}</span>
                     <hr/>
                 </div>
 
                 <div>
                     <h2>Search text in all branches</h2>
-                    <input id="searchText" type="text"/>
+                    <input id="searchText" type="text" value={this.state.searchString} onChange={handleSearchChange} onKeyPress={search}/>
                 </div>
 
-                <div>
-                    <ul id="list">
-
-                    </ul>
-                </div>
+                <ul>
+                    {this.state.lines.map((value, index) => {
+                        return <li key={index}>{value}</li>
+                    })}
+                </ul>
 
                 <div>
                     <h3>Git Executable: <input type="text" id="bashPath"/></h3>
