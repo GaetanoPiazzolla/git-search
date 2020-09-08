@@ -1,19 +1,23 @@
-import React from 'react';
-import './App.css';
+import React, {useState} from 'react';
 
+import './App.css';
 import Utils from './scripts'
+
 import Button from 'react-bootstrap/Button';
+import InputGroup from 'react-bootstrap/InputGroup'
+import FormControl from 'react-bootstrap/FormControl'
 import Container from "react-bootstrap/Container";
 import Alert from "react-bootstrap/Alert";
-import ListGroup from "react-bootstrap/ListGroup";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
+import Header from "./Header";
+import ReactPaginate from 'react-paginate';
+
 
 const exec = window?.exported?.exec;
 const dialog = window?.exported?.dialog;
-
 
 class App extends React.Component {
 
@@ -32,7 +36,7 @@ class App extends React.Component {
 
         let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
 
-        var selectRepoFolder = () => {
+        let selectRepoFolder = () => {
 
             dialog.showOpenDialog({properties: ['openDirectory', 'multiSelections']}).then((args) => {
                 console.log(args);
@@ -70,6 +74,13 @@ class App extends React.Component {
             this.setState({searchString: event.target.value});
         };
 
+        let removeRepo = (dir) => {
+            let newDirs = this.state.directories.filter((dirIn) => {
+                return dirIn !== dir
+            });
+            this.setState(() => ({directories: newDirs}));
+        };
+
         let search = (e) => {
             if ((e.key === 'Enter') && this.state.searchString) {
 
@@ -77,10 +88,9 @@ class App extends React.Component {
 
                 exec(bashPath + ' --login -c \" cd ""' + this.state.directories[0].repositoryPath + '"" && git branch -a | tr -d \\* | sed \'/->/d\' | xargs git grep -n -I ""' + this.state.searchString + '""', (error, stdout, stderr) => {
                     if (stderr) {
-                        this.setState(() => ({
-                            errorRepository: stderr,
-                            outputRepository: ''
-                        }));
+
+                        //TODO
+
                     } else {
 
                         let lines = stdout.split('\n');
@@ -89,7 +99,7 @@ class App extends React.Component {
                             let tokens = line.split(':');
                             tokens.pop();
                             return tokens.join(':');
-                        })
+                        });
 
                         this.setState(() => ({
                             lines: lines
@@ -99,74 +109,111 @@ class App extends React.Component {
             }
         };
 
-        let getElement = (dir) => {
-            return (<OverlayTrigger
-                key={dir}
-                placement='bottom'
-                overlay={
-                    <Tooltip id={`tooltip-${dir}`}>
-                        <strong style={{color: dir.error ? 'red' : 'green'}}>{dir.gitRemote || dir.error}</strong>
-                    </Tooltip>
-                }
-            >
-                <Alert
-                    variant={(() => (dir.error ? 'danger' : 'success'))()}>{dir.repositoryPath}</Alert>
-            </OverlayTrigger>)
+        let renderDirectories = () => {
+
+            if (this.state.directories)
+
+                return (<>
+                    <Row>
+
+                        <Col md="6">
+
+
+                            {
+                                this.state.directories.filter((value, index) => (
+                                    index % 2 === 0 && index < 8)).map(dir => getRepoElement(dir))
+                            }
+
+                        </Col>
+
+                        <Col md="6">
+
+                            {
+                                this.state.directories.filter((value, index) => (
+                                    index % 2 !== 0 && index < 8)).map(dir => getRepoElement(dir))
+                            }
+
+                        </Col>
+
+                        <hr/>
+
+                    </Row>
+                    {
+                        <div><h5 style={{textAlign: 'right'}}>... more</h5></div>
+                    }
+                </>);
+
+        };
+
+        let getLastChars = (path) => {
+            if (path && path.length > 30) {
+                return '...' + path.slice(path.length - 30);
+            } else {
+                return path;
+            }
+        };
+
+        let getRepoElement = (dir) => {
+
+            return (
+                <OverlayTrigger
+                    key={dir}
+                    placement='bottom'
+                    overlay={
+                        <Tooltip id={`tooltip-${dir}`}>
+                            <strong
+                                style={{color: dir.error ? 'red' : 'green'}}>{dir.gitRemote || dir.error}</strong>
+                        </Tooltip>
+                    }
+                >
+                    <Alert style={{whiteSpace: 'nowrap'}} dismissible onClose={() => removeRepo(dir)}
+                           variant={(() => (dir.error ? 'danger' : 'success'))()}>{getLastChars(dir.repositoryPath)}</Alert>
+                </OverlayTrigger>)
+
         };
 
         return (
+            <>
+                <Header/>
 
-            <Container>
-                <div>
-                    <h2>Git Search <Button variant="outline-primary" id="selectFolderButton"
-                                           onClick={selectRepoFolder}>+</Button></h2>
+                <Container fluid>
+                    <div>
+
+                        <h5 style={{textAlign: 'center'}}>
+                            <Button id=" selectFolderButton" variant="dark" onClick={selectRepoFolder}>Add</Button>Repositories
+                        </h5>
+                        <hr/>
+
+                        {renderDirectories()}
+
+                    </div>
+
+
+                    <div>
+                        <InputGroup className="mb-3">
+                            <FormControl
+                                style={{textAlign: 'center'}}
+                                placeholder="Search..."
+                                aria-label="Username"
+                                aria-describedby="basic-addon1"
+                                type="text"
+                                value={this.state.searchString}
+                                onChange={handleSearchChange}
+                                onKeyPress={search}
+                            />
+                        </InputGroup>
+
+                    </div>
                     <hr/>
-                    {
-                        !this.state.directories &&
-                        <h5 style={{textAlign: 'center'}}>Add repositories to search into</h5>
-                    }
-                    {
-                        this.state.directories &&
-                        <Row>
-                            <Col md="6">
 
-                                {
-                                    this.state.directories.filter((value, index) => (
-                                        index % 2 === 0)).map(dir => getElement(dir))
-                                }
+                    <ul>
+                        {this.state.lines.map((value, index) => {
+                            return <li key={index}>{value}</li>
+                        })}
+                    </ul>
 
-                            </Col>
-
-                            <Col md="6">
-
-                                {
-                                    this.state.directories.filter((value, index) => (
-                                        index % 2 !== 0)).map(dir => getElement(dir))
-                                }
-
-                            </Col>
-                        </Row>
-                    }
-                </div>
-
-                <hr/>
-
-                <div>
-                    <h2>Search text in all branches</h2>
-                    <input id="searchText" type="text" value={this.state.searchString} onChange={handleSearchChange}
-                           onKeyPress={search}/>
-                </div>
-
-                <ul>
-                    {this.state.lines.map((value, index) => {
-                        return <li key={index}>{value}</li>
-                    })}
-                </ul>
-
-                <div>
-                    <h3>Git Executable: <input type="text" id="bashPath"/></h3>
-                </div>
-            </Container>)
+                </Container>
+            </>)
     }
 }
 
