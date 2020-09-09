@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 
 import './App.css';
 import Utils from './scripts'
@@ -13,8 +13,7 @@ import Row from "react-bootstrap/Row";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import Header from "./Header";
-import ReactPaginate from 'react-paginate';
-
+import SearchResult from "./SearchResult";
 
 const exec = window?.exported?.exec;
 const dialog = window?.exported?.dialog;
@@ -24,8 +23,7 @@ class App extends React.Component {
     defaultState = {
         directories: null,
         searchString: '',
-        lines: [],
-        repositoryPaths: []
+        searchResults: []
     };
 
     state = {
@@ -82,11 +80,20 @@ class App extends React.Component {
         };
 
         let search = (e) => {
+
+            // when user digits, reset search results
+            this.setState(() => ({searchResults: []}));
+
+            // todo button1
             if ((e.key === 'Enter') && this.state.searchString) {
 
                 console.log('Searching for: ', this.state.searchString);
 
-                exec(bashPath + ' --login -c \" cd ""' + this.state.directories[0].repositoryPath + '"" && git branch -a | tr -d \\* | sed \'/->/d\' | xargs git grep -n -I ""' + this.state.searchString + '""', (error, stdout, stderr) => {
+                const dir = this.state.directories[0].repositoryPath;
+
+                // todo loop trough
+                // todo sometimes does not return
+                exec(bashPath + ' --login -c \" cd ""' + dir + '"" && git branch -a | tr -d \\* | sed \'/->/d\' | xargs git grep -n -I ""' + this.state.searchString + '""', (error, stdout, stderr) => {
                     if (stderr) {
 
                         //TODO
@@ -94,16 +101,20 @@ class App extends React.Component {
                     } else {
 
                         let lines = stdout.split('\n');
-
                         lines.map(line => {
                             let tokens = line.split(':');
                             tokens.pop();
                             return tokens.join(':');
                         });
 
-                        this.setState(() => ({
+                        let newResults = this.state.searchResults;
+                        newResults.push( {
+                            repo: dir,
                             lines: lines
-                        }));
+                        });
+                        this.setState(() => ({searchResults: newResults}));
+
+
                     }
                 });
             }
@@ -117,29 +128,24 @@ class App extends React.Component {
                     <Row>
 
                         <Col md="6">
-
-
                             {
                                 this.state.directories.filter((value, index) => (
                                     index % 2 === 0 && index < 8)).map(dir => getRepoElement(dir))
                             }
-
                         </Col>
 
                         <Col md="6">
-
                             {
                                 this.state.directories.filter((value, index) => (
                                     index % 2 !== 0 && index < 8)).map(dir => getRepoElement(dir))
                             }
-
                         </Col>
 
                         <hr/>
 
                     </Row>
                     {
-                        <div><h5 style={{textAlign: 'right'}}>... more</h5></div>
+                        this.state.directories.length >= 8 && <div><h5 style={{textAlign: 'right'}}>... more</h5></div>
                     }
                 </>);
 
@@ -177,6 +183,7 @@ class App extends React.Component {
                 <Header/>
 
                 <Container fluid>
+
                     <div>
 
                         <h5 style={{textAlign: 'center'}}>
@@ -187,7 +194,6 @@ class App extends React.Component {
                         {renderDirectories()}
 
                     </div>
-
 
                     <div>
                         <InputGroup className="mb-3">
@@ -202,15 +208,11 @@ class App extends React.Component {
                                 onKeyPress={search}
                             />
                         </InputGroup>
-
                     </div>
+
                     <hr/>
 
-                    <ul>
-                        {this.state.lines.map((value, index) => {
-                            return <li key={index}>{value}</li>
-                        })}
-                    </ul>
+                    <SearchResult results={this.state.searchResults}></SearchResult>
 
                 </Container>
             </>)
