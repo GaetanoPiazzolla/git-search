@@ -16,6 +16,7 @@ import Header from "./Header";
 import SearchResult from "./SearchResult";
 
 const exec = window?.exported?.exec;
+const execSync = window?.exported?.execSync;
 const dialog = window?.exported?.dialog;
 
 class App extends React.Component {
@@ -31,8 +32,24 @@ class App extends React.Component {
     };
 
     render() {
-
         let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
+        //
+        // const dir = '/c/workspace_reca_new/alert';
+        // const searchString = 'string';
+        // const command = bashPath + ' --login -c \" cd ""' + dir + '"" ' +
+        //     '&& git branch -a | ' +
+        //     'tr -d \\* | sed \'/->/d\' | ' +
+        //     'xargs git grep -n -I ""' + searchString + '""';
+        //
+        // try {
+        //     let output = execSync(command);
+        //     console.log('output ',output.toString())
+        // }
+        // catch(exception)
+        // {
+        //     console.error('errore', exception.message);
+        // }
+
 
         let selectRepoFolder = () => {
 
@@ -46,26 +63,30 @@ class App extends React.Component {
                 console.log('filepath selected: ', args.filePaths);
 
                 args.filePaths.forEach((path) => {
+
                     let repositoryPath = Utils.convertWinToUnixFolder(path);
                     console.log('filepath converted:', repositoryPath);
 
-                    exec(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"', (error, stdout, stderr) => {
+                    let output, error;
+                    try {
+                        output = execSync(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"');
+                    } catch (errorthrown) {
+                        error = errorthrown.message;
+                    }
 
-                        let directories = this.state.directories ? this.state.directories : [];
+                    let directories = this.state.directories ? this.state.directories : [];
 
-                        directories.push({
-                            repositoryPath,
-                            error: stderr ? stderr : null,
-                            gitRemote: stdout ? stdout : null
-                        });
-
-                        this.setState(() => ({directories: directories}));
-
+                    directories.push({
+                        repositoryPath,
+                        error: error ? error : null,
+                        gitRemote: output ? output.toString() : null
                     });
 
-                });
+                    this.setState(() => ({directories: directories}));
 
+                });
             });
+
         };
 
         let handleSearchChange = (event) => {
@@ -79,28 +100,41 @@ class App extends React.Component {
             this.setState(() => ({directories: newDirs}));
         };
 
-        let search = (e) => {
-
-            // when user digits, reset search results
+        let keyPressSearch = (e) => {
             this.setState(() => ({searchResults: []}));
+        };
 
-            // todo button1
-            if ((e.key === 'Enter') && this.state.searchString) {
+        let search = () => {
+
+            if (this.state.searchString) {
 
                 console.log('Searching for: ', this.state.searchString);
 
-                const dir = this.state.directories[0].repositoryPath;
+                this.state.directories.forEach((directory) => {
 
-                // todo loop trough
-                // todo sometimes does not return
-                exec(bashPath + ' --login -c \" cd ""' + dir + '"" && git branch -a | tr -d \\* | sed \'/->/d\' | xargs git grep -n -I ""' + this.state.searchString + '""', (error, stdout, stderr) => {
-                    if (stderr) {
+                    if (directory.error) {
+                        return;
+                    }
 
-                        //TODO
+                    const dir = directory.repositoryPath;
 
-                    } else {
+                    const command = bashPath + ' --login -c \" cd ""' + dir + '"" ' +
+                        '&& git branch -a | ' +
+                        'tr -d \\* | sed \'/->/d\' | ' +
+                        'xargs git grep -n -I ""' + this.state.searchString + '""';
 
-                        let lines = stdout.split('\n');
+                    let output;
+                    try {
+                        output = execSync(command);
+                    } catch (e) {
+                        console.error(e.message);
+                        return;
+                    }
+
+                    console.log('searched for', this.state.searchString);
+
+                    if (output) {
+                        let lines = output.toString().split('\n');
                         lines.map(line => {
                             let tokens = line.split(':');
                             tokens.pop();
@@ -108,15 +142,14 @@ class App extends React.Component {
                         });
 
                         let newResults = this.state.searchResults;
-                        newResults.push( {
+                        newResults.push({
                             repo: dir,
                             lines: lines
                         });
                         this.setState(() => ({searchResults: newResults}));
-
-
                     }
-                });
+                })
+
             }
         };
 
@@ -205,14 +238,16 @@ class App extends React.Component {
                                 type="text"
                                 value={this.state.searchString}
                                 onChange={handleSearchChange}
-                                onKeyPress={search}
+                                onKeyPress={keyPressSearch}
                             />
+                            <Button id="search" variant="dark" onClick={search}>search</Button>
+
                         </InputGroup>
                     </div>
 
                     <hr/>
 
-                    <SearchResult results={this.state.searchResults}></SearchResult>
+                    <SearchResult results={this.state.searchResults}/>
 
                 </Container>
             </>)

@@ -8,19 +8,17 @@ class SearchResult extends React.Component {
         return (
             <>
                 <Tabs>
-                        {this.props.results.map((value) => {
-                            return (
-                                <Tab eventKey={value.repo} title={value.repo}>
-
-                                    <ul>
-                                        {value.lines.map((value, index) => {
-                                            return <li key={index}>{value}</li>
-                                        })}
-                                    </ul>
-
-                                </Tab>
-                            )
-                        })}
+                    {this.props.results.map((result) => {
+                        return (
+                            <Tab eventKey={result.repo} title={result.repo}>
+                                <ul>
+                                    {result.lines.map((value, index) => {
+                                        return <li key={index}>{value}</li>
+                                    })}
+                                </ul>
+                            </Tab>
+                        )
+                    })}
                 </Tabs>
 
             </>
