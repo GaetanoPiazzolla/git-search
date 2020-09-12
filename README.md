@@ -10,5 +10,4 @@ Per avviare in sviluppo
   npm run dev
 ```
 
-
-![Anteprima](https://github.com/GaetanoPiazzolla/git-search/blob/master/anteprima.PNG)
+![Anteprima](https://github.com/GaetanoPiazzolla/git-search/blob/master/anteprima-sm.PNG)
