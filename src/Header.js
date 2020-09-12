@@ -1,8 +1,8 @@
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import Button from "react-bootstrap/Button";
 import React from "react";
-import {FaCog, FaSearchengin} from "react-icons/fa";
-
+import {FaCog} from "react-icons/fa";
+import logo192Invert from "./assets/logo192-invert.png"
 
 class Header extends React.Component {
 
@@ -10,7 +10,7 @@ class Header extends React.Component {
         return (<div id="title-bar">
             <div id="title">
                 <h4 style={{verticalAlign: 'middle', marginTop: 5}}>
-                    <FaSearchengin style={{color: 'white', marginRight: 10}} size={25}/>
+                    <img src={logo192Invert} width={30} />
                     Git Search</h4>
             </div>
             <div id="title-bar-btns">

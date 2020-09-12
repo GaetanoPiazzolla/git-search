@@ -15,14 +15,13 @@ import Tooltip from "react-bootstrap/Tooltip";
 import Header from "./Header";
 import SearchResult from "./SearchResult";
 
-const exec = window?.exported?.exec;
 const execSync = window?.exported?.execSync;
 const dialog = window?.exported?.dialog;
 
 class App extends React.Component {
 
     defaultState = {
-        directories: null,
+        directories: [],
         searchString: '',
         searchResults: []
     };
@@ -33,23 +32,6 @@ class App extends React.Component {
 
     render() {
         let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
-        //
-        // const dir = '/c/workspace_reca_new/alert';
-        // const searchString = 'string';
-        // const command = bashPath + ' --login -c \" cd ""' + dir + '"" ' +
-        //     '&& git branch -a | ' +
-        //     'tr -d \\* | sed \'/->/d\' | ' +
-        //     'xargs git grep -n -I ""' + searchString + '""';
-        //
-        // try {
-        //     let output = execSync(command);
-        //     console.log('output ',output.toString())
-        // }
-        // catch(exception)
-        // {
-        //     console.error('errore', exception.message);
-        // }
-
 
         let selectRepoFolder = () => {
 
@@ -70,19 +52,21 @@ class App extends React.Component {
                     let output, error;
                     try {
                         output = execSync(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"');
-                    } catch (errorthrown) {
-                        error = errorthrown.message;
+                    } catch (exp) {
+                        error = exp.message;
                     }
 
-                    let directories = this.state.directories ? this.state.directories : [];
-
-                    directories.push({
+                    let directory = {
                         repositoryPath,
                         error: error ? error : null,
                         gitRemote: output ? output.toString() : null
-                    });
+                    };
 
-                    this.setState(() => ({directories: directories}));
+                    this.setState((oldState) => (
+                        {
+                            ...oldState,
+                            directories: [...oldState.directories, directory]
+                        }));
 
                 });
             });
@@ -105,6 +89,11 @@ class App extends React.Component {
         };
 
         let search = () => {
+
+            this.setState(() => (
+                {
+                    searchResults: []
+                }));
 
             if (this.state.searchString) {
 
@@ -141,12 +130,17 @@ class App extends React.Component {
                             return tokens.join(':');
                         });
 
-                        let newResults = this.state.searchResults;
-                        newResults.push({
+                        var result = {
                             repo: dir,
                             lines: lines
-                        });
-                        this.setState(() => ({searchResults: newResults}));
+                        };
+
+                        this.setState((oldState) => (
+                            {
+                                ...oldState,
+                                searchResults: [...oldState.searchResults, result]
+                            }));
+
                     }
                 })
 
