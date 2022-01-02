@@ -1,9 +1,8 @@
-
 DA FARE:
 
 - fix readme.MD
 
-- fix vulnerabilità, alzare versione di electron
+- fix vulnerabilità, alzare versione di electron -> DONE, upgraded.
 
 - pulire il codice di package.json
 

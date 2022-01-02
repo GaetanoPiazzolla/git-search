@@ -18,6 +18,7 @@ import SearchResult from "./SearchResult";
 const execSync = window?.exported?.execSync;
 const dialog = window?.exported?.dialog;
 
+
 class App extends React.Component {
 
     defaultState = {
@@ -31,6 +32,8 @@ class App extends React.Component {
     };
 
     render() {
+        console.log('rendering')
+
         let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
 
         let selectRepoFolder = () => {
@@ -51,7 +54,7 @@ class App extends React.Component {
 
                     let output, error;
                     try {
-                        output = execSync(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"');
+                        output = execSync(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"', {windowsHide: true});
                     } catch (exp) {
                         error = exp.message;
                     }
@@ -114,7 +117,7 @@ class App extends React.Component {
 
                     let output;
                     try {
-                        output = execSync(command);
+                        output = execSync(command, {windowsHide: true});
                     } catch (e) {
                         console.error(e.message);
                         return;
