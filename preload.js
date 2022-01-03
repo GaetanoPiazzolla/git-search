@@ -1,26 +1,19 @@
-// whis will contain all the electron and nodeJS modules
+console.log('preloading start')
+
 window.exported = {};
 
-console.log('preloading')
+const electronRemote = require('@electron/remote')
+window.exported.dialog = electronRemote.dialog;
+window.exported.getCurrentWindow = electronRemote.getCurrentWindow;
 
-const {dialog} = require('@electron/remote')
-window.exported.dialog = dialog;
-
-const exec = require('child_process').exec;
-window.exported.exec = exec;
-
-const execSync = require('child_process').execSync;
-window.exported.execSync = execSync;
+const childProcess = require('child_process');
+window.exported.exec = childProcess.exec;
+window.exported.execSync = childProcess.execSync;
 
 const spawn = require('child_process').spawn;
 window.exported.spawn = spawn;
 
-window.addEventListener('DOMContentLoaded', () => {
+const path = require('path')
+window.exported.path = path;
 
-    console.log('DOMContentLoaded event');
-
-});
-
-
-
-
+console.log('preloading end')

@@ -1,14 +1,12 @@
 DA FARE:
 
 - fix readme.MD
-
-- fix vulnerabilità, alzare versione di electron -> DONE, upgraded.
-
-- pulire il codice di package.json
+- fix vulnerabilità, alzare versione di electron -> DONE
+- pulire il codice di package.json -> DONE
 
 FUNZIONALITA' aggiuntiva:
 
-- chiudi/sotto icona/ ingrandisci --- bottoni sulla release bar
+- chiudi/sotto icona/ ingrandisci --- bottoni sulla release bar -> DONE
 
 - quando si clicca sul file,
   vengono visualizzati in un popup

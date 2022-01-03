@@ -1,7 +1,7 @@
 import React from 'react';
 
 import './App.css';
-import Utils from './scripts'
+import Utils from './services/Utils'
 
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup'
@@ -14,6 +14,8 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import Header from "./Header";
 import SearchResult from "./SearchResult";
+import EventBus from "./services/EventBus";
+import MyLoader from "./MyLoader";
 
 const execSync = window?.exported?.execSync;
 const dialog = window?.exported?.dialog;
@@ -31,6 +33,12 @@ class App extends React.Component {
         ...this.defaultState
     };
 
+    componentDidMount() {
+    }
+
+    componentWillUnmount() {
+    }
+
     render() {
         console.log('rendering')
 
@@ -47,9 +55,11 @@ class App extends React.Component {
 
                 console.log('filepath selected: ', args.filePaths);
 
-                args.filePaths.forEach((path) => {
+                EventBus.getInstance().fireEvent("LOADING", true)
 
-                    let repositoryPath = Utils.convertWinToUnixFolder(path);
+                args.filePaths.forEach((p) => {
+
+                    let repositoryPath = Utils.convertWinToUnixFolder(p);
                     console.log('filepath converted:', repositoryPath);
 
                     let output, error;
@@ -72,6 +82,9 @@ class App extends React.Component {
                         }));
 
                 });
+
+                EventBus.getInstance().fireEvent("LOADING", false)
+
             });
 
         };
@@ -211,6 +224,7 @@ class App extends React.Component {
         return (
             <>
                 <Header/>
+                <MyLoader/>
 
                 <Container fluid>
 

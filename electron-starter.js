@@ -13,6 +13,7 @@ function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800, height: 600, frame: false,
+        icon: './src/assets/logo192-invert.png',
         webPreferences: {
             nodeIntegration: true, // is default value after Electron v5
             preload: path.join(__dirname, 'preload.js'),

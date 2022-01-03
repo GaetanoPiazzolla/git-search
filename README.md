@@ -1,13 +1,19 @@
 # git-search
-Git search all your repositories and branches!
+Git search inside all your repositories.
 
-Progetto sviluppato in ElectronJS & React;
-Cercasi collaboratori.
+Find results inside remote and local branches! 
 
-Per avviare in sviluppo 
+How to build executable: 
 
+```shell
+npm run build
+electron-builder build
 ```
-  npm run dev
+
+Run in development mode: 
+
+``` shell
+npm run dev
 ```
 
-![Anteprima](https://github.com/GaetanoPiazzolla/git-search/blob/master/anteprima-sm.PNG)
+![Anteprima](./misc/anteprima-sm.PNG)

@@ -1,2 +1,5 @@
 - SECURITY
 use contextBrigde instead of contextIsolation: false
+fast startup & loading panel
+react icon
+sign certificate exe file
