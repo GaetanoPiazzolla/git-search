@@ -1,40 +1,24 @@
-DA FARE:
+Misc:
 
-- fix readme.MD
+- fix readme.MD -> DONE
 - fix vulnerabilità, alzare versione di electron -> DONE
 - pulire il codice di package.json -> DONE
 
 FUNZIONALITA' aggiuntiva:
 
 - chiudi/sotto icona/ ingrandisci --- bottoni sulla release bar -> DONE
-
-- quando si clicca sul file,
-  vengono visualizzati in un popup
-  5 linee prima, 5 linee dopo ( 5 magari da configurare )
-  dentro questo popup ci sarà l'opzione "open file"
-
-- loading, e visualizzazione di nessun risultato
-
+- quando si clicca sul file, viene aperto / scaricato
+- loading -> DONE
+- visualizzazione di nessun risultato
 - build
-
 - specificare directory dove è installato git da configurazione
-
 - load all repositories in parent folder
-
 - mantenimento dei repo nella history
 
 Grafica:
 
 - spazio tra il nome del branch, il file e il codice;
-  raggruppare per branches i risultati
-
+- raggruppare per branches i risultati
 - distringuere tra branch remoti (remotes/origin) e branch locali
-
 - settare icona dell'applicazione windows
-
 - aggiungere toast con messaggi di errore
-  (
-    -non è un repository git
-    -comando di ricerca fallito
-    -non sono stati trovati risultati
-  )
