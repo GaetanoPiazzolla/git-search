@@ -28,12 +28,14 @@ class MyLoader extends React.Component {
 
     render() {
 
-        return this.state.loading ? <Loader visible={this.state.loading}
-                                            type="Puff"
-                                            color="#00BFFF"
-                                            height={100}
-                                            width={100}
-                                            timeout={0}/> : <></>
+        return this.state.loading ?
+            <div id={'loader'}><Loader visible={this.state.loading}
+                         type="Audio"
+                         color="#60FFA0"
+                         height={200}
+                         width={200}
+                         timeout={0}/>
+            </div> : <></>
     }
 
 

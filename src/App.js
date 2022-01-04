@@ -18,6 +18,7 @@ import EventBus from "./services/EventBus";
 import MyLoader from "./MyLoader";
 
 const execSync = window?.exported?.execSync;
+const exec = window?.exported?.exec;
 const dialog = window?.exported?.dialog;
 
 
@@ -55,35 +56,39 @@ class App extends React.Component {
 
                 console.log('filepath selected: ', args.filePaths);
 
+
                 EventBus.getInstance().fireEvent("LOADING", true)
+                let filePathsNumber = args.filePaths.length;
 
                 args.filePaths.forEach((p) => {
 
                     let repositoryPath = Utils.convertWinToUnixFolder(p);
                     console.log('filepath converted:', repositoryPath);
 
-                    let output, error;
-                    try {
-                        output = execSync(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"', {windowsHide: true});
-                    } catch (exp) {
-                        error = exp.message;
-                    }
+                    exec(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"', {windowsHide: true}, (err, stdout, stderr) => {
 
-                    let directory = {
-                        repositoryPath,
-                        error: error ? error : null,
-                        gitRemote: output ? output.toString() : null
-                    };
+                        console.log(stdout);
 
-                    this.setState((oldState) => (
-                        {
-                            ...oldState,
-                            directories: [...oldState.directories, directory]
-                        }));
+                        let directory = {
+                            repositoryPath,
+                            error: err ? err.toString() : null,
+                            gitRemote: stdout ? stdout.toString() : null
+                        };
+
+                        this.setState((oldState) => (
+                            {
+                                ...oldState,
+                                directories: [...oldState.directories, directory]
+                            }));
+
+                        filePathsNumber--;
+                        if (filePathsNumber === 0)
+                            EventBus.getInstance().fireEvent("LOADING", false)
+
+                    });
 
                 });
 
-                EventBus.getInstance().fireEvent("LOADING", false)
 
             });
 
@@ -115,6 +120,9 @@ class App extends React.Component {
 
                 console.log('Searching for: ', this.state.searchString);
 
+                EventBus.getInstance().fireEvent("LOADING", true)
+                let directoriesNumber = this.state.directories.length;
+
                 this.state.directories.forEach((directory) => {
 
                     if (directory.error) {
@@ -128,36 +136,45 @@ class App extends React.Component {
                         'tr -d \\* | sed \'/->/d\' | ' +
                         'xargs git grep -n -I ""' + this.state.searchString + '""';
 
-                    let output;
-                    try {
-                        output = execSync(command, {windowsHide: true});
-                    } catch (e) {
-                        console.error(e.message);
-                        return;
-                    }
+                    exec(command, {windowsHide: true}, (err, stdout, stderr) => {
 
-                    console.log('searched for', this.state.searchString);
+                        if (err) {
+                            //TODO handle error of no results!
+                            console.error(err);
+                            directoriesNumber--;
+                            if (directoriesNumber === 0)
+                                EventBus.getInstance().fireEvent("LOADING", false)
+                            return;
+                        }
 
-                    if (output) {
-                        let lines = output.toString().split('\n');
-                        lines.map(line => {
-                            let tokens = line.split(':');
-                            tokens.pop();
-                            return tokens.join(':');
-                        });
+                        console.log('searched for', this.state.searchString);
 
-                        var result = {
-                            repo: dir,
-                            lines: lines
-                        };
+                        if (stdout) {
+                            let lines = stdout.toString().split('\n');
+                            lines.map(line => {
+                                let tokens = line.split(':');
+                                tokens.pop();
+                                return tokens.join(':');
+                            });
 
-                        this.setState((oldState) => (
-                            {
-                                ...oldState,
-                                searchResults: [...oldState.searchResults, result]
-                            }));
+                            let result = {
+                                repo: dir,
+                                lines: lines
+                            };
 
-                    }
+                            this.setState((oldState) => (
+                                {
+                                    ...oldState,
+                                    searchResults: [...oldState.searchResults, result]
+                                }))
+                        }
+                        directoriesNumber--;
+                        if (directoriesNumber === 0)
+                            EventBus.getInstance().fireEvent("LOADING", false)
+
+                    });
+
+
                 })
 
             }
