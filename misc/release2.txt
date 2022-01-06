@@ -7,7 +7,7 @@ Misc:
 FUNZIONALITA' aggiuntiva:
 
 - chiudi/sotto icona/ ingrandisci --- bottoni sulla release bar -> DONE
-- quando si clicca sul file, viene aperto / scaricato
+- quando si clicca sul file, viene aperto / scaricato -> DONE
 - loading -> DONE
 - visualizzazione di nessun risultato
 - build

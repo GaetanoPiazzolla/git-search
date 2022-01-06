@@ -158,6 +158,8 @@ class App extends React.Component {
                                 return tokens.join(':')
                             })
 
+                            lines.pop()
+
                             let result = {
                                 repo: dir,
                                 lines: lines
@@ -170,8 +172,9 @@ class App extends React.Component {
                                 }))
                         }
                         directoriesNumber--
-                        if (directoriesNumber === 0)
+                        if (directoriesNumber === 0) {
                             EventBus.getInstance().fireEvent("LOADING", false)
+                        }
 
                     })
 
@@ -277,7 +280,7 @@ class App extends React.Component {
 
                     <hr/>
 
-                    <SearchResult results={this.state.searchResults}/>
+                    <SearchResult results={this.state.searchResults} searchString={this.state.searchString}/>
 
                 </Container>
             </>)

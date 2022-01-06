@@ -16,4 +16,4 @@ Run in development mode:
 npm run dev
 ```
 
-![Anteprima](./misc/anteprima-sm.PNG)
+![Demo](./misc/git-search.webm)
