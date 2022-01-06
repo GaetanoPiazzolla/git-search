@@ -1,26 +1,24 @@
-import React from 'react';
+import React from 'react'
 
-import './App.css';
+import './App.css'
 import Utils from './services/Utils'
 
-import Button from 'react-bootstrap/Button';
+import Button from 'react-bootstrap/Button'
 import InputGroup from 'react-bootstrap/InputGroup'
 import FormControl from 'react-bootstrap/FormControl'
-import Container from "react-bootstrap/Container";
-import Alert from "react-bootstrap/Alert";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import Tooltip from "react-bootstrap/Tooltip";
-import Header from "./Header";
-import SearchResult from "./SearchResult";
-import EventBus from "./services/EventBus";
-import MyLoader from "./MyLoader";
+import Container from "react-bootstrap/Container"
+import Alert from "react-bootstrap/Alert"
+import Col from "react-bootstrap/Col"
+import Row from "react-bootstrap/Row"
+import OverlayTrigger from "react-bootstrap/OverlayTrigger"
+import Tooltip from "react-bootstrap/Tooltip"
+import Header from "./Header"
+import SearchResult from "./SearchResult"
+import EventBus from "./services/EventBus"
+import MyLoader from "./MyLoader"
 
-const execSync = window?.exported?.execSync;
-const exec = window?.exported?.exec;
-const dialog = window?.exported?.dialog;
-
+const exec = window?.exported?.exec
+const dialog = window?.exported?.dialog
 
 class App extends React.Component {
 
@@ -28,11 +26,11 @@ class App extends React.Component {
         directories: [],
         searchString: '',
         searchResults: []
-    };
+    }
 
     state = {
         ...this.defaultState
-    };
+    }
 
     componentDidMount() {
     }
@@ -43,124 +41,127 @@ class App extends React.Component {
     render() {
         console.log('rendering')
 
-        let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"';
+        let bashPath = '\"C:\\Program Files\\Git\\bin\\sh.exe\"'
 
         let selectRepoFolder = () => {
 
             dialog.showOpenDialog({properties: ['openDirectory', 'multiSelections']}).then((args) => {
-                console.log(args);
+                console.log(args)
 
                 if (args.canceled) {
-                    return;
+                    return
                 }
 
-                console.log('filepath selected: ', args.filePaths);
+                console.log('filepath selected: ', args.filePaths)
 
 
                 EventBus.getInstance().fireEvent("LOADING", true)
-                let filePathsNumber = args.filePaths.length;
+                let filePathsNumber = args.filePaths.length
 
                 args.filePaths.forEach((p) => {
 
-                    let repositoryPath = Utils.convertWinToUnixFolder(p);
-                    console.log('filepath converted:', repositoryPath);
+                    let repositoryPath = Utils.convertWinToUnixFolder(p)
+                    console.log('filepath converted:', repositoryPath)
 
                     exec(bashPath + ' --login -c \" cd ""' + repositoryPath + '"" && git remote -v \"', {windowsHide: true}, (err, stdout, stderr) => {
 
-                        console.log(stdout);
+                        console.log(stdout)
 
                         let directory = {
                             repositoryPath,
                             error: err ? err.toString() : null,
                             gitRemote: stdout ? stdout.toString() : null
-                        };
+                        }
 
                         this.setState((oldState) => (
                             {
                                 ...oldState,
                                 directories: [...oldState.directories, directory]
-                            }));
+                            }))
 
-                        filePathsNumber--;
+                        filePathsNumber--
                         if (filePathsNumber === 0)
                             EventBus.getInstance().fireEvent("LOADING", false)
 
-                    });
+                    })
 
-                });
+                })
 
 
-            });
+            })
 
-        };
+        }
 
         let handleSearchChange = (event) => {
-            this.setState({searchString: event.target.value});
-        };
+            this.setState({searchString: event.target.value})
+        }
 
         let removeRepo = (dir) => {
             let newDirs = this.state.directories.filter((dirIn) => {
                 return dirIn !== dir
-            });
-            this.setState(() => ({directories: newDirs}));
-        };
+            })
+            this.setState(() => ({directories: newDirs}))
+        }
 
-        let keyPressSearch = (e) => {
-            this.setState(() => ({searchResults: []}));
-        };
+        let searchKeyDown = (event) => {
+            if (event.key === 'Enter') {
+                search()
+            }
+        }
 
         let search = () => {
 
             this.setState(() => (
                 {
                     searchResults: []
-                }));
+                }))
 
             if (this.state.searchString) {
 
-                console.log('Searching for: ', this.state.searchString);
+                console.log('Searching for: ', this.state.searchString)
 
-                EventBus.getInstance().fireEvent("LOADING", true)
-                let directoriesNumber = this.state.directories.length;
+                let directoriesNumber = this.state.directories.length
+                if (directoriesNumber > 0)
+                    EventBus.getInstance().fireEvent("LOADING", true)
 
                 this.state.directories.forEach((directory) => {
 
                     if (directory.error) {
-                        return;
+                        return
                     }
 
-                    const dir = directory.repositoryPath;
+                    const dir = directory.repositoryPath
 
                     const command = bashPath + ' --login -c \" cd ""' + dir + '"" ' +
                         '&& git branch -a | ' +
                         'tr -d \\* | sed \'/->/d\' | ' +
-                        'xargs git grep -n -I ""' + this.state.searchString + '""';
+                        'xargs git grep -n -I ""' + this.state.searchString + '""'
 
                     exec(command, {windowsHide: true}, (err, stdout, stderr) => {
 
                         if (err) {
                             //TODO handle error of no results!
-                            console.error(err);
-                            directoriesNumber--;
+                            console.error(err)
+                            directoriesNumber--
                             if (directoriesNumber === 0)
                                 EventBus.getInstance().fireEvent("LOADING", false)
-                            return;
+                            return
                         }
 
-                        console.log('searched for', this.state.searchString);
+                        console.log('searched for', this.state.searchString)
 
                         if (stdout) {
-                            let lines = stdout.toString().split('\n');
+                            let lines = stdout.toString().split('\n')
                             lines.map(line => {
-                                let tokens = line.split(':');
-                                tokens.pop();
-                                return tokens.join(':');
-                            });
+                                let tokens = line.split(':')
+                                tokens.pop()
+                                return tokens.join(':')
+                            })
 
                             let result = {
                                 repo: dir,
                                 lines: lines
-                            };
+                            }
 
                             this.setState((oldState) => (
                                 {
@@ -168,17 +169,17 @@ class App extends React.Component {
                                     searchResults: [...oldState.searchResults, result]
                                 }))
                         }
-                        directoriesNumber--;
+                        directoriesNumber--
                         if (directoriesNumber === 0)
                             EventBus.getInstance().fireEvent("LOADING", false)
 
-                    });
+                    })
 
 
                 })
 
             }
-        };
+        }
 
         let renderDirectories = () => {
 
@@ -207,17 +208,17 @@ class App extends React.Component {
                     {
                         this.state.directories.length >= 8 && <div><h5 style={{textAlign: 'right'}}>... more</h5></div>
                     }
-                </>);
+                </>)
 
-        };
+        }
 
         let getLastChars = (path) => {
             if (path && path.length > 30) {
-                return '...' + path.slice(path.length - 30);
+                return '...' + path.slice(path.length - 30)
             } else {
-                return path;
+                return path
             }
-        };
+        }
 
         let getRepoElement = (dir) => {
 
@@ -236,7 +237,7 @@ class App extends React.Component {
                            variant={(() => (dir.error ? 'danger' : 'success'))()}>{getLastChars(dir.repositoryPath)}</Alert>
                 </OverlayTrigger>)
 
-        };
+        }
 
         return (
             <>
@@ -260,15 +261,16 @@ class App extends React.Component {
                         <InputGroup className="mb-3">
                             <FormControl
                                 style={{textAlign: 'center'}}
-                                placeholder="Search..."
+                                placeholder="Your text..."
                                 aria-label="Username"
                                 aria-describedby="basic-addon1"
                                 type="text"
                                 value={this.state.searchString}
                                 onChange={handleSearchChange}
-                                onKeyPress={keyPressSearch}
+                                onKeyDown={searchKeyDown}
                             />
-                            <Button id="search" variant="dark" onClick={search}>search</Button>
+                            <Button id="search" variant="dark" onClick={search}
+                            >Search</Button>
 
                         </InputGroup>
                     </div>
@@ -282,4 +284,4 @@ class App extends React.Component {
     }
 }
 
-export default App;
+export default App

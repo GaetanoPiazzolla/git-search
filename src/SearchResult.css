@@ -1,0 +1,8 @@
+.file {
+    cursor: pointer;
+}
+
+.file:hover{
+    text-decoration: underline;
+    color: #60FFA0;
+}
