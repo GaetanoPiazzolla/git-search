@@ -16,4 +16,4 @@ Run in development mode:
 npm run dev
 ```
 
-![Demo](./misc/git-search.webm)
+![Demo](./misc/git-search.gif)
